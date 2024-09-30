@@ -3,7 +3,6 @@ package com.login.register.authentication.service.impl;
 import com.login.register.authentication.dto.EmployeeDTO;
 import com.login.register.authentication.dto.LoginDTO;
 import com.login.register.authentication.entity.Employee;
-import com.login.register.authentication.payloadresponse.LoginMesage;
 import com.login.register.authentication.payloadresponse.LoginMessage;
 import com.login.register.authentication.repo.EmployeeRepo;
 import com.login.register.authentication.service.EmployeeService;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 @Service
-public class EmployeeIMPL implements EmployeeService {
+public class EmployeeImpl implements EmployeeService {
     @Autowired
     private EmployeeRepo employeeRepo;
     @Autowired
