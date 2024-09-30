@@ -13,4 +13,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();  // BCrypt is a secure and commonly used password encoder
     }
+
+
 }

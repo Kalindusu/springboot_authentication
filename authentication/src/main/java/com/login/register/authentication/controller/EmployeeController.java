@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin
 public class EmployeeController {
 
-    private final EmployeeService employeeService;
+    private  EmployeeService employeeService;
 
     // Constructor injection
     @Autowired
@@ -20,7 +20,7 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
-    @PostMapping("/save")
+    @PostMapping(path="/save")
     public String saveEmployee(@RequestBody EmployeeDTO employeeDTO){
         String id = employeeService.addEmployee(employeeDTO);
         return id;
