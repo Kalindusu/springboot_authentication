@@ -19,9 +19,8 @@ import org.slf4j.LoggerFactory;
 public class EmployeeController {
 
     private final EmployeeService employeeService;
-    private static final Logger logger = LoggerFactory.getLogger(EmployeeController.class); // Add logger
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeController.class);  // Add logger
 
-    // Constructor injection
     @Autowired
     public EmployeeController(EmployeeService employeeService) {
         this.employeeService = employeeService;
@@ -40,7 +39,7 @@ public class EmployeeController {
         logger.info("Login attempt for email: {}", loginDTO.getEmail());  // Log login attempt
         try {
             LoginMessage loginMessage = employeeService.loginEmployee(loginDTO);
-            if (loginMessage == null || !loginMessage.getStatus()) {  // Fix here: Use getStatus() instead of isSuccess()
+            if (loginMessage == null || !loginMessage.getStatus()) {  // Use getStatus() instead of isSuccess()
                 logger.warn("Login failed for email: {}", loginDTO.getEmail());  // Log failure
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
             }
