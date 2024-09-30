@@ -25,44 +25,54 @@ public class EmployeeImpl implements EmployeeService {
 
     @Override
     public String addEmployee(EmployeeDTO employeeDTO) {
-        logger.info("Adding new employee: {}", employeeDTO.getEmail());  // Log employee addition
+        // Encode password before saving it
+        String encodedPassword = this.passwordEncoder.encode(employeeDTO.getPassword());
+        logger.info("Encoded password for employee {}: {}", employeeDTO.getEmail(), encodedPassword);  // Log encoded password
+
         Employee employee = new Employee(
                 employeeDTO.getEmployeeid(),
                 employeeDTO.getEmployeename(),
                 employeeDTO.getEmail(),
-                this.passwordEncoder.encode(employeeDTO.getPassword())
+                encodedPassword  // Store the encoded password
         );
         employeeRepo.save(employee);
-        logger.info("Employee saved successfully: {}", employeeDTO.getEmployeename());  // Log success
+        logger.info("Employee saved successfully: {}", employeeDTO.getEmployeename());
         return employee.getEmployeename();
     }
 
     @Override
     public LoginMessage loginEmployee(LoginDTO loginDTO) {
-        logger.info("Attempting to login employee with email: {}", loginDTO.getEmail());  // Log login attempt
+        try {
+            logger.info("Attempting to login employee with email: {}", loginDTO.getEmail());
 
-        // Find employee by email
-        Employee employee = employeeRepo.findByEmail(loginDTO.getEmail());
+            // Find employee by email
+            Employee employee = employeeRepo.findByEmail(loginDTO.getEmail());
 
-        if (employee != null) {
-            logger.info("Employee found with email: {}", loginDTO.getEmail());  // Log found employee
+            if (employee == null) {
+                logger.warn("No employee found with email: {}", loginDTO.getEmail());
+                return new LoginMessage("Email does not exist", false);
+            }
 
+            // Get the raw password entered by the user and the encoded password from the database
             String rawPassword = loginDTO.getPassword();
             String encodedPassword = employee.getPassword();
+
+            logger.info("Raw password: {}", rawPassword);  // Log raw password (for debugging only)
+            logger.info("Encoded password in DB: {}", encodedPassword);  // Log encoded password
 
             // Check if the password matches
             boolean isPasswordCorrect = passwordEncoder.matches(rawPassword, encodedPassword);
 
             if (isPasswordCorrect) {
-                logger.info("Login successful for email: {}", loginDTO.getEmail());  // Log successful login
+                logger.info("Login successful for email: {}", loginDTO.getEmail());
                 return new LoginMessage("Login Success", true);
             } else {
-                logger.warn("Login failed: incorrect password for email: {}", loginDTO.getEmail());  // Log password mismatch
+                logger.warn("Incorrect password for email: {}", loginDTO.getEmail());
                 return new LoginMessage("Password does not match", false);
             }
-        } else {
-            logger.warn("Login failed: email not found for email: {}", loginDTO.getEmail());  // Log email not found
-            return new LoginMessage("Email does not exist", false);
+        } catch (Exception e) {
+            logger.error("Error occurred during login for email: {}", loginDTO.getEmail(), e);
+            return new LoginMessage("An internal error occurred", false);
         }
     }
 }
