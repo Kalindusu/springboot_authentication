@@ -1,36 +1,55 @@
 package com.login.register.authentication.service.impl;
 
 import com.login.register.authentication.dto.EmployeeDTO;
+import com.login.register.authentication.dto.LoginDTO;
 import com.login.register.authentication.entity.Employee;
+import com.login.register.authentication.payloadresponse.LoginMesage;
+import com.login.register.authentication.payloadresponse.LoginMessage;
 import com.login.register.authentication.repo.EmployeeRepo;
 import com.login.register.authentication.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;  // Use Spring Security PasswordEncoder
 import org.springframework.stereotype.Service;
 
-@Service  // Register this class as a service in Spring's context
-public class EmployeeImpl implements EmployeeService {
-
+import java.util.Optional;
+@Service
+public class EmployeeIMPL implements EmployeeService {
     @Autowired
     private EmployeeRepo employeeRepo;
-
     @Autowired
-    private PasswordEncoder passwordEncoder;  // Use Spring Security's PasswordEncoder
-
+    private PasswordEncoder passwordEncoder;
     @Override
     public String addEmployee(EmployeeDTO employeeDTO) {
-        // Creating an Employee entity from the DTO
         Employee employee = new Employee(
                 employeeDTO.getEmployeeid(),
                 employeeDTO.getEmployeename(),
                 employeeDTO.getEmail(),
-                passwordEncoder.encode(employeeDTO.getPassword())  // Encode the password
+                this.passwordEncoder.encode(employeeDTO.getPassword())
         );
-
-        // Save the employee to the repository (assume employeeRepo is a JpaRepository)
         employeeRepo.save(employee);
-
-        // Return the employee name after saving
         return employee.getEmployeename();
+    }
+    EmployeeDTO employeeDTO;
+    @Override
+    public LoginMessage loginEmployee(LoginDTO loginDTO) {
+        String msg = "";
+        Employee employee1 = employeeRepo.findByEmail(loginDTO.getEmail());
+        if (employee1 != null) {
+            String password = loginDTO.getPassword();
+            String encodedPassword = employee1.getPassword();
+            Boolean isPwdRight = passwordEncoder.matches(password, encodedPassword);
+            if (isPwdRight) {
+                Optional<Employee> employee = employeeRepo.findOneByEmailAndPassword(loginDTO.getEmail(), encodedPassword);
+                if (employee.isPresent()) {
+                    return new LoginMessage("Login Success", true);
+                } else {
+                    return new LoginMessage("Login Failed", false);
+                }
+            } else {
+                return new LoginMessage("password Not Match", false);
+            }
+        }else {
+            return new LoginMessage("Email not exits", false);
+        }
     }
 }
