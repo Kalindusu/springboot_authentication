@@ -7,18 +7,25 @@ import com.login.register.authentication.payloadresponse.LoginMessage;
 import com.login.register.authentication.repo.EmployeeRepo;
 import com.login.register.authentication.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;  // Use Spring Security PasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
 @Service
 public class EmployeeImpl implements EmployeeService {
+
     @Autowired
     private EmployeeRepo employeeRepo;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private static final Logger logger = LoggerFactory.getLogger(EmployeeImpl.class);  // Add logger
+
     @Override
     public String addEmployee(EmployeeDTO employeeDTO) {
+        logger.info("Adding new employee: {}", employeeDTO.getEmail());  // Log employee addition
         Employee employee = new Employee(
                 employeeDTO.getEmployeeid(),
                 employeeDTO.getEmployeename(),
@@ -26,29 +33,36 @@ public class EmployeeImpl implements EmployeeService {
                 this.passwordEncoder.encode(employeeDTO.getPassword())
         );
         employeeRepo.save(employee);
+        logger.info("Employee saved successfully: {}", employeeDTO.getEmployeename());  // Log success
         return employee.getEmployeename();
     }
-    EmployeeDTO employeeDTO;
+
     @Override
     public LoginMessage loginEmployee(LoginDTO loginDTO) {
-        String msg = "";
-        Employee employee1 = employeeRepo.findByEmail(loginDTO.getEmail());
-        if (employee1 != null) {
-            String password = loginDTO.getPassword();
-            String encodedPassword = employee1.getPassword();
-            Boolean isPwdRight = passwordEncoder.matches(password, encodedPassword);
-            if (isPwdRight) {
-                Optional<Employee> employee = employeeRepo.findOneByEmailAndPassword(loginDTO.getEmail(), encodedPassword);
-                if (employee.isPresent()) {
-                    return new LoginMessage("Login Success", true);
-                } else {
-                    return new LoginMessage("Login Failed", false);
-                }
+        logger.info("Attempting to login employee with email: {}", loginDTO.getEmail());  // Log login attempt
+
+        // Find employee by email
+        Employee employee = employeeRepo.findByEmail(loginDTO.getEmail());
+
+        if (employee != null) {
+            logger.info("Employee found with email: {}", loginDTO.getEmail());  // Log found employee
+
+            String rawPassword = loginDTO.getPassword();
+            String encodedPassword = employee.getPassword();
+
+            // Check if the password matches
+            boolean isPasswordCorrect = passwordEncoder.matches(rawPassword, encodedPassword);
+
+            if (isPasswordCorrect) {
+                logger.info("Login successful for email: {}", loginDTO.getEmail());  // Log successful login
+                return new LoginMessage("Login Success", true);
             } else {
-                return new LoginMessage("password Not Match", false);
+                logger.warn("Login failed: incorrect password for email: {}", loginDTO.getEmail());  // Log password mismatch
+                return new LoginMessage("Password does not match", false);
             }
-        }else {
-            return new LoginMessage("Email not exits", false);
+        } else {
+            logger.warn("Login failed: email not found for email: {}", loginDTO.getEmail());  // Log email not found
+            return new LoginMessage("Email does not exist", false);
         }
     }
 }
